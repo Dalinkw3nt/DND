@@ -1,0 +1,13 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: devops-example-broken
+  namespace: example-services
+  labels:
+    name: devops-example-broken
+spec:
+  ports:
+    - port: 9028
+      targetPort: 9028
+  selector:
+    app: broken-devops-example

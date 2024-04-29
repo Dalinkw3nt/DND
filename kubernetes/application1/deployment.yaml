@@ -1,0 +1,77 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: devops-example-working
+  namespace: example-services
+spec:
+  selector:
+    matchLabels:
+      app: devops-example-working
+  replicas: 2
+  template:
+    metadata:
+      name: devops-example-working
+      labels:
+        app: devops-example-working
+    spec:
+      containers:
+        - name: devops-example-working
+          resources:
+            requests:
+              memory: 200Mi
+            limits:
+              memory: 400Mi
+          image: 12345678.dkr.ecr.ca-central-1.amazonaws.com/devops-example-working:0.1.3
+          imagePullPolicy: IfNotPresent
+          ports:
+            - name: rsports
+              containerPort: 9028
+          readinessProbe:
+            httpGet:
+              path: /status
+              port: 9028
+              scheme: HTTPS
+            initialDelaySeconds: 30
+            timeoutSeconds: 30
+          livenessProbe:
+            httpGet:
+              path: /status
+              port: 9028
+              scheme: HTTPS
+            initialDelaySeconds: 60
+            timeoutSeconds: 30
+            periodSeconds: 30
+            failureThreshold: 10
+          env:
+            - name: RabbitHostName
+              valueFrom:
+                configMapKeyRef:
+                  name: rabbit-config
+                  key: rabbit-hostname
+            - name: RabbitPort
+              valueFrom:
+                configMapKeyRef:
+                  name: rabbit-config
+                  key: rabbit-port
+            - name: RabbitUsername
+              valueFrom:
+                configMapKeyRef:
+                  name: rabbit-config
+                  key: rabbit-username
+          envFrom:
+            - configMapRef:
+                name: dnd-devops-example-working
+          volumeMounts:
+            - name: tls-cert
+              mountPath: /var/certs
+      volumes:
+        - name: tls-cert
+          secret:
+            secretName: star-dyedurham-dev
+      topologySpreadConstraints:
+        - maxSkew: 1
+          topologyKey: topology.kubernetes.io/zone
+          whenUnsatisfiable: ScheduleAnyway
+          labelSelector:
+            matchLabels:
+              app: devops-example-working
